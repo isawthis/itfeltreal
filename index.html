@@ -110,7 +110,8 @@
     position: absolute; top: 0; left: 0;
     width: 100%; height: 100%;
     overflow: hidden;
-    will-change: transform, opacity;
+    /* Dreamlike dissolve — opacity crossfade, no hard swipe */
+    will-change: opacity;
   }
 
   .slide-bg {
@@ -626,7 +627,9 @@ const counter  = document.getElementById('slide-counter');
 const dotsWrap = document.getElementById('dots');
 
 let cur = 0, busy = false;
-const DUR = 620;
+/** Slow crossfade between slides (dreamlike dissolve, not a film cut). */
+const SLIDE_CROSSFADE_MS = 900;
+const SLIDE_EASE = 'cubic-bezier(0.35, 0.02, 0.25, 1)';
 
 slides.forEach((_, i) => {
   const d = document.createElement('div');
@@ -635,16 +638,16 @@ slides.forEach((_, i) => {
   dotsWrap.appendChild(d);
 });
 
-function setSlide(idx, tx, instant) {
-  const el = slides[idx];
-  el.style.transition = instant ? 'none'
-    : `transform ${DUR}ms cubic-bezier(0.77,0,0.175,1), opacity ${DUR}ms ease`;
-  el.style.transform = `translateX(${tx}%)`;
-  el.style.opacity   = tx === 0 ? '1' : '0';
-  el.style.zIndex    = tx === 0 ? '2' : '1';
+function initSlideStack() {
+  slides.forEach((el, i) => {
+    el.style.transform = 'none';
+    el.style.transition = 'none';
+    el.style.opacity = i === 0 ? '1' : '0';
+    el.style.zIndex = i === 0 ? '2' : '1';
+  });
 }
 
-slides.forEach((_, i) => setSlide(i, i === 0 ? 0 : 100, true));
+initSlideStack();
 
 function updateUI() {
   counter.textContent = `${String(cur + 1).padStart(2,'0')} / ${String(N).padStart(2,'0')}`;
@@ -669,18 +672,39 @@ function updateUI() {
 function goTo(next) {
   if (busy || next === cur || next < 0 || next >= N) return;
   busy = true;
-  const prev = cur, dir = next > prev ? 1 : -1;
+  const prev = cur;
   cur = next;
-  setSlide(next, dir * 100, true);
-  void slides[next].offsetWidth;
-  setSlide(prev, -dir * 100, false);
-  setSlide(next, 0, false);
+  const elPrev = slides[prev];
+  const elNext = slides[next];
+  const tr = `opacity ${SLIDE_CROSSFADE_MS}ms ${SLIDE_EASE}`;
+
+  elNext.style.transition = 'none';
+  elNext.style.opacity = '0';
+  elNext.style.zIndex = '3';
+  elPrev.style.zIndex = '2';
+  void elNext.offsetWidth;
+
+  elNext.style.transition = tr;
+  elPrev.style.transition = tr;
+  elNext.style.opacity = '1';
+  elPrev.style.opacity = '0';
+
   updateUI();
   if (cur === N - 1) initWall();
+
   setTimeout(() => {
-    slides.forEach((_, i) => { if (i !== cur) setSlide(i, 100, true); });
+    slides.forEach((el, i) => {
+      el.style.transform = 'none';
+      if (i === cur) {
+        el.style.zIndex = '2';
+        el.style.opacity = '1';
+      } else {
+        el.style.zIndex = '1';
+        el.style.opacity = '0';
+      }
+    });
     busy = false;
-  }, DUR + 40);
+  }, SLIDE_CROSSFADE_MS + 50);
 }
 
 btnPrev.addEventListener('click', () => goTo(cur - 1));
