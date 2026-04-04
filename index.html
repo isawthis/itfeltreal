@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>I had a weird dream...</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap');
@@ -25,6 +25,11 @@
     user-select: none;
   }
 
+  @keyframes intro-landing-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
   /* ════ INTRO ════ */
   #intro {
     position: fixed; inset: 0;
@@ -32,6 +37,7 @@
     background: var(--bg);
     z-index: 100;
     overflow: hidden;
+    animation: intro-landing-fade 1.8s ease-in forwards;
   }
 
   #intro-canvas {
@@ -132,6 +138,13 @@
   #intro-enter:active { transform: translateX(-50%) scale(0.98); }
   #intro-enter:disabled { opacity: 0; pointer-events: none; }
 
+  @media (prefers-reduced-motion: reduce) {
+    #intro {
+      animation: none;
+      opacity: 1;
+    }
+  }
+
   /* ════ SLIDESHOW ════ */
   #slideshow {
     position: fixed; inset: 0;
@@ -156,7 +169,7 @@
     position: absolute; top: 0; left: 0;
     width: 100%; height: 100%;
     overflow: hidden;
-    /* Dreamlike dissolve — opacity crossfade, no hard swipe */
+    /* Crossfade only: opacity, no translate (timing set in JS: 0.9s ease-in-out) */
     will-change: opacity;
   }
 
@@ -213,6 +226,70 @@
     background-image:
       linear-gradient(to right, var(--bg) 0%, transparent min(22vw, 180px)),
       linear-gradient(to left, var(--bg) 0%, transparent min(22vw, 180px));
+  }
+
+  /* Mobile: full viewport width, no horizontal scroll; swipe targets comic slides */
+  @media (max-width: 640px) {
+    html {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      overscroll-behavior-x: none;
+    }
+    body {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      overscroll-behavior-x: none;
+    }
+    #intro {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    #slideshow,
+    #slides-strip {
+      max-width: 100%;
+      overflow-x: hidden;
+      width: 100%;
+    }
+    #slides-strip {
+      touch-action: none;
+    }
+    #wall-input-wrap,
+    #wall-input,
+    #wall-send {
+      touch-action: auto;
+    }
+    .slide {
+      max-width: 100%;
+      width: 100%;
+      left: 0;
+      overflow: hidden;
+    }
+    .slide:not(#wall-slide-wrapper) .slide-bg {
+      left: 0;
+      top: 0;
+      transform: none;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      object-fit: contain;
+      object-position: center;
+    }
+    .slide:not(#wall-slide-wrapper) .slide-backdrop {
+      left: 50%;
+      top: 50%;
+      width: 100%;
+      height: 100%;
+      transform: translate(-50%, -50%) scale(1.22);
+      object-fit: cover;
+      object-position: center;
+    }
+    #wall-slide {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
   }
 
   .slide-placeholder {
@@ -449,32 +526,32 @@
 
     <!-- slides 1–7： dream comic frames -->
     <div class="slide" data-i="0" data-asset="slide-1.png">
-      <img class="slide-backdrop" src="slide-1.png" alt="" aria-hidden="true" decoding="async">
-      <img class="slide-bg" src="slide-1.png" alt="Dream collage — babysitting" decoding="async" fetchpriority="high">
+      <img class="slide-backdrop" src="slide-1.png" alt="" aria-hidden="true" decoding="async" draggable="false">
+      <img class="slide-bg" src="slide-1.png" alt="Dream collage — babysitting" decoding="async" fetchpriority="high" draggable="false">
     </div>
     <div class="slide" data-i="1" data-asset="slide-2.png">
-      <img class="slide-backdrop" src="slide-2.png" alt="" aria-hidden="true" decoding="async">
-      <img class="slide-bg" src="slide-2.png" alt="Dream collage — phone and baby" decoding="async">
+      <img class="slide-backdrop" src="slide-2.png" alt="" aria-hidden="true" decoding="async" draggable="false">
+      <img class="slide-bg" src="slide-2.png" alt="Dream collage — phone and baby" decoding="async" draggable="false">
     </div>
     <div class="slide" data-i="2" data-asset="slide-3.png">
-      <img class="slide-backdrop" src="slide-3.png" alt="" aria-hidden="true" decoding="async">
-      <img class="slide-bg" src="slide-3.png" alt="Dream collage — fireplace, wand, and creature" decoding="async">
+      <img class="slide-backdrop" src="slide-3.png" alt="" aria-hidden="true" decoding="async" draggable="false">
+      <img class="slide-bg" src="slide-3.png" alt="Dream collage — fireplace, wand, and creature" decoding="async" draggable="false">
     </div>
     <div class="slide" data-i="3" data-asset="slide-4.png">
-      <img class="slide-backdrop" src="slide-4.png" alt="" aria-hidden="true" decoding="async">
-      <img class="slide-bg" src="slide-4.png" alt="Dream collage — fire, purple creature, blue cube, screaming figure" decoding="async">
+      <img class="slide-backdrop" src="slide-4.png" alt="" aria-hidden="true" decoding="async" draggable="false">
+      <img class="slide-bg" src="slide-4.png" alt="Dream collage — fire, purple creature, blue cube, screaming figure" decoding="async" draggable="false">
     </div>
     <div class="slide" data-i="4" data-asset="slide-5.png">
-      <img class="slide-backdrop" src="slide-5.png" alt="" aria-hidden="true" decoding="async">
-      <img class="slide-bg" src="slide-5.png" alt="Dream collage — burnt baby, text, and fire" decoding="async">
+      <img class="slide-backdrop" src="slide-5.png" alt="" aria-hidden="true" decoding="async" draggable="false">
+      <img class="slide-bg" src="slide-5.png" alt="Dream collage — burnt baby, text, and fire" decoding="async" draggable="false">
     </div>
     <div class="slide" data-i="5" data-asset="slide-6.png">
-      <img class="slide-backdrop" src="slide-6.png" alt="" aria-hidden="true" decoding="async">
-      <img class="slide-bg" src="slide-6.png" alt="Dream collage — figure, eyes in blue beam, fix the baby text" decoding="async">
+      <img class="slide-backdrop" src="slide-6.png" alt="" aria-hidden="true" decoding="async" draggable="false">
+      <img class="slide-bg" src="slide-6.png" alt="Dream collage — figure, eyes in blue beam, fix the baby text" decoding="async" draggable="false">
     </div>
     <div class="slide" data-i="6" data-asset="slide-7.png">
-      <img class="slide-backdrop" src="slide-7.png" alt="" aria-hidden="true" decoding="async">
-      <img class="slide-bg" src="slide-7.png" alt="Illustration — waking up, What the…!?" decoding="async">
+      <img class="slide-backdrop" src="slide-7.png" alt="" aria-hidden="true" decoding="async" draggable="false">
+      <img class="slide-bg" src="slide-7.png" alt="Illustration — waking up, What the…!?" decoding="async" draggable="false">
     </div>
 
     <!-- dream wall -->
@@ -678,9 +755,9 @@ const btnPrev  = document.getElementById('btn-prev');
 const btnNext  = document.getElementById('btn-next');
 
 let cur = 0, busy = false;
-/** Slow crossfade between slides (dreamlike dissolve, not a film cut). */
+/** Simultaneous crossfade: outgoing 1→0, incoming 0→1; no motion on .slide. */
 const SLIDE_CROSSFADE_MS = 900;
-const SLIDE_EASE = 'cubic-bezier(0.35, 0.02, 0.25, 1)';
+const SLIDE_EASE = 'ease-in-out';
 
 function initSlideStack() {
   slides.forEach((el, i) => {
@@ -737,6 +814,7 @@ function goTo(next) {
   setTimeout(() => {
     slides.forEach((el, i) => {
       el.style.transform = 'none';
+      el.style.transition = '';
       if (i === cur) {
         el.style.zIndex = '2';
         el.style.opacity = '1';
@@ -756,20 +834,33 @@ window.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft')  goTo(cur - 1);
 });
 
-let tx0 = 0, ty0 = 0, touchOnInput = false;
-showEl.addEventListener('touchstart', e => {
-  touchOnInput = e.target.closest('#wall-card') !== null;
-  tx0 = e.touches[0].clientX;
-  ty0 = e.touches[0].clientY;
+const slidesStrip = document.getElementById('slides-strip');
+let swipe0 = null;
+const SWIPE_MIN_PX = 42;
+
+function swipeIgnoreTarget(t) {
+  return t && (t.closest('#wall-input-wrap') || t.closest('.nav-btn') || t.closest('#chrome-bottom'));
+}
+
+slidesStrip.addEventListener('touchstart', e => {
+  if (!showEl.classList.contains('visible')) return;
+  if (swipeIgnoreTarget(e.target)) { swipe0 = null; return; }
+  swipe0 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 }, { passive: true });
 
-showEl.addEventListener('touchend', e => {
-  if (touchOnInput) return;
-  const dx = e.changedTouches[0].clientX - tx0;
-  const dy = e.changedTouches[0].clientY - ty0;
-  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 36)
-    goTo(dx < 0 ? cur + 1 : cur - 1);
+slidesStrip.addEventListener('touchend', e => {
+  if (!swipe0) return;
+  const x = e.changedTouches[0].clientX;
+  const y = e.changedTouches[0].clientY;
+  const dx = x - swipe0.x;
+  const dy = y - swipe0.y;
+  swipe0 = null;
+  if (Math.abs(dx) < SWIPE_MIN_PX) return;
+  if (Math.abs(dx) < Math.abs(dy) * 1.15) return;
+  goTo(dx < 0 ? cur + 1 : cur - 1);
 }, { passive: true });
+
+slidesStrip.addEventListener('touchcancel', () => { swipe0 = null; }, { passive: true });
 
 updateUI();
 
