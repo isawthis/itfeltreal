@@ -240,6 +240,10 @@
       max-width: 100%;
       overflow-x: hidden;
     }
+    #intro-canvas {
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
     #slideshow,
     #slides-strip {
       max-width: 100%;
@@ -524,18 +528,6 @@
     #wall-count {
       bottom: max(152px, calc(140px + env(safe-area-inset-bottom, 0px)));
     }
-
-    /* Same left/right softening as desktop, only while slides are crossfading */
-    #slides-strip.slide-crossfading::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      z-index: 25;
-      pointer-events: none;
-      background-image:
-        linear-gradient(to right, var(--bg) 0%, transparent min(22vw, 180px)),
-        linear-gradient(to left, var(--bg) 0%, transparent min(22vw, 180px));
-    }
   }
 </style>
 </head>
@@ -646,7 +638,7 @@ window.addEventListener('resize', iResize);
 
 function sampleText(text) {
   const off = document.createElement('canvas');
-  const oc  = off.getContext('2d');
+  const oc  = off.getContext('2d', { willReadFrequently: true }) || off.getContext('2d');
   off.width = IW; off.height = IH;
   const fs = Math.min(IW * 0.048, 44);
   oc.font = `italic 400 ${fs}px Menlo, Monaco, Consolas, Liberation Mono, monospace`;
@@ -656,10 +648,19 @@ function sampleText(text) {
   oc.fillText(text, IW / 2, IH / 2);
   const { data } = oc.getImageData(0, 0, IW, IH);
   const pts = [];
-  const step = Math.max(2, Math.round(IW / 200));
+  const narrow = IW <= 640;
+  /* Fewer samples on phones = lighter getImageData scan + fewer particles = steadier RAF */
+  const step = narrow
+    ? Math.max(5, Math.round(IW / 56))
+    : Math.max(2, Math.round(IW / 200));
   for (let y = 0; y < IH; y += step)
     for (let x = 0; x < IW; x += step)
       if (data[(y * IW + x) * 4 + 3] > 100) pts.push({ x, y });
+  const cap = narrow ? 2000 : 6000;
+  if (pts.length > cap) {
+    const stride = Math.ceil(pts.length / cap);
+    return pts.filter((_, i) => i % stride === 0);
+  }
   return pts;
 }
 
@@ -829,8 +830,6 @@ function updateUI() {
     cur === N - 1 ? 'all' : 'none';
 }
 
-const mqMobileSlideshow = window.matchMedia('(max-width: 640px)');
-
 function goTo(next) {
   if (busy || next === cur || next < 0 || next >= N) return;
   busy = true;
@@ -839,9 +838,6 @@ function goTo(next) {
   const elPrev = slides[prev];
   const elNext = slides[next];
   const tr = `opacity ${SLIDE_CROSSFADE_MS}ms ${SLIDE_EASE}`;
-  const stripFade =
-    mqMobileSlideshow.matches && !mqReduceMotionIntro.matches;
-  if (stripFade) slidesStrip.classList.add('slide-crossfading');
 
   setSlideTransition(elNext, 'none');
   elNext.style.opacity = '0';
@@ -869,7 +865,6 @@ function goTo(next) {
         el.style.opacity = '0';
       }
     });
-    if (stripFade) slidesStrip.classList.remove('slide-crossfading');
     busy = false;
   }, SLIDE_CROSSFADE_MS + 50);
 }
